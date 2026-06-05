@@ -35,17 +35,77 @@ void index_handler()
 <html>
 <head>
     <title>yt-hush | data collection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            margin: 0;
+            background: #f5f5f5;
+        }
+
+        #status {
+        min-height: 60px;
+        margin-bottom: 20px;
+        padding: 12px;
+
+        font-size: 1.4rem;
+        font-weight: bold;
+        text-align: center;
+
+        color: #ffffff;
+        background: #444;
+        border-radius: 12px;
+        }
+
+        #status:empty {
+            background: transparent;
+            padding: 12px;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            min-height: 70px;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .capture {
+            background: #007bff;
+            color: white;
+        }
+
+        .start {
+            background: #28a745;
+            color: white;
+        }
+
+        .stop {
+            background: #dc3545;
+            color: white;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="status" style="margin-bottom:20px; font-weight:bold;"></div>
+    <div id="status"></div>
 
-    <button onclick="call('/capture')">Burst Capture</button>
+    <button class="start" onclick="call('/start')">
+        Start Acquisition
+    </button>
 
-    <br/><br/><br/><br/><br/>
+    <button class="stop" onclick="call('/stop')">
+        Stop Acquisition
+    </button>
 
-    <button onclick="call('/start')">Start App</button>
-    <button onclick="call('/stop')">Stop App</button>
+    <button class="capture" onclick="call('/capture')">
+        Burst Capture
+    </button>
 
 <script>
 async function call(endpoint) {
@@ -95,13 +155,13 @@ void capture_handler()
 void start_handler()
 {
     app_running = true;
-    server.send(200, "application/json", "{\"message\":\"App started\"}");
+    server.send(200, "application/json", "{\"message\":\"Acquisition started\"}");
 }
 
 void stop_handler()
 {
     app_running = false;
-    server.send(200, "application/json", "{\"message\":\"App stopped\"}");
+    server.send(200, "application/json", "{\"message\":\"Acquisition stopped\"}");
 }
 
 void app_setup()
