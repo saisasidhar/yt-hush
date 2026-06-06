@@ -44,7 +44,7 @@ void index_handler()
             background: #f5f5f5;
         }
 
-        #status {
+        #status, #countdown{
         min-height: 60px;
         margin-bottom: 20px;
         padding: 12px;
@@ -58,7 +58,7 @@ void index_handler()
         border-radius: 12px;
         }
 
-        #status:empty {
+        #status:empty, #countdown:empty{
             background: transparent;
             padding: 12px;
         }
@@ -107,13 +107,19 @@ void index_handler()
         Burst Capture
     </button>
 
+    <div id="countdown"></div>
+
 <script>
 async function call(endpoint) {
     try {
         const res = await fetch(endpoint);
         const data = await res.json();
 
-        showMessage(data.message || "OK");
+        if (endpoint === "/capture") {
+            showCountdown(42)
+        } else {
+            showMessage(data.message || "OK");
+        }
     } catch (e) {
         showMessage("Request failed");
     }
@@ -122,10 +128,19 @@ async function call(endpoint) {
 function showMessage(msg) {
     const el = document.getElementById("status");
     el.textContent = msg;
+}
 
-    setTimeout(() => {
-        el.textContent = "";
-    }, 3000);
+function showCountdown(count) {
+    const el = document.getElementById("countdown");
+    const countdown = setInterval(() => {
+        count--;
+        if (count === 0) {
+            clearInterval(countdown);
+            el.textContent = "";
+        } else {
+            el.textContent = count;
+        }
+    }, 1000);
 }
 </script>
 
@@ -207,24 +222,26 @@ void app_loop()
 {
     server.handleClient();
     static int count = 0;
-    static int led_blink_ms = 250;
+    static uint32_t next_capture_ms = 0;
     if (app_running) {
         uint32_t now = millis();
-        if (burst.active) {
-            delay(1000-led_blink_ms);
-            if (now > burst.end_time_ms)
-                burst.active = false;
-        } else {
-            delay(5000-led_blink_ms);
+        if (now > next_capture_ms) {
+            digitalWrite(LED_BUILTIN, LOW);
+            if (!AI.invoke(1, false, true)){
+                log_i("[%s]Captured Image %d at %d\n", burst.active ? "*": " ", ++count, now);
+            }
+            log_i("[%s]Captured Image %d at %d\n", burst.active ? "*": " ", ++count, now);
+            digitalWrite(LED_BUILTIN, HIGH);
+            if (burst.active) {
+                next_capture_ms = now + (1000);
+                if (now > burst.end_time_ms)
+                    burst.active = false;
+            } else {
+                next_capture_ms = now + (5000);
+            }
         }
-        digitalWrite(LED_BUILTIN, LOW);
-        if (!AI.invoke(1, false, true)){
-            log_i("[%s]Captured Image %d\n", burst.active ? "*": " ", ++count);
-        }
-        delay(led_blink_ms);
-        digitalWrite(LED_BUILTIN, HIGH);
     }
-    
+    delay(50);
 }
 
 #endif
