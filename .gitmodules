@@ -1,0 +1,3 @@
+[submodule "training/ModelAssistant"]
+	path = training/ModelAssistant
+	url = https://github.com/Seeed-Studio/ModelAssistant
