@@ -6,6 +6,9 @@
 #include <WebServer.h>
 #include <string>
 
+#include "USB.h"
+#include "USBHIDKeyboard.h"
+
 #define DEBUG_PORT Serial
 static const char* TAG = "yt-hush";
 
@@ -19,6 +22,14 @@ HardwareSerial atSerial(0);
 SSCMA AI;
 
 WebServer server(80);
+
+USBHIDKeyboard Keyboard;
+#define TV_SELECT KEY_RETURN
+#define TV_UP     KEY_UP_ARROW
+#define TV_DOWN   KEY_DOWN_ARROW
+#define TV_LEFT   KEY_LEFT_ARROW
+#define TV_RIGHT  KEY_RIGHT_ARROW
+#define TV_MUTE   KEY_F8
 
 bool app_running = false;
 struct BurstCaptureState
@@ -36,6 +47,7 @@ void index_handler()
 <head>
     <title>yt-hush | data collection</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -89,6 +101,36 @@ void index_handler()
             background: #dc3545;
             color: white;
         }
+        
+        .remote {
+            max-width: 320px;
+            margin: 20px auto;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .nav-btn {
+            min-height: 70px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            background: #666;
+            color: white;
+        }
+
+        .ok-btn {
+            background: #28a745;
+        }
+
+        .mute-btn {
+            background: #ff9800;
+            margin-top: 20px;
+        }
     </style>
 </head>
 
@@ -109,19 +151,51 @@ void index_handler()
 
     <div id="countdown"></div>
 
+    <div class="remote">
+        <div class="nav-grid">
+            <div></div>
+            <button class="nav-btn" onclick="simpleCall('/up')">▲</button>
+            <div></div>
+
+            <button class="nav-btn" onclick="simpleCall('/left')">◀</button>
+            <button class="nav-btn ok-btn" onclick="simpleCall('/select')">🔘</button>
+            <button class="nav-btn" onclick="simpleCall('/right')">▶</button>
+
+            <div></div>
+            <button class="nav-btn" onclick="simpleCall('/down')">▼</button>
+            <div></div>
+        </div>
+
+        <button class="nav-btn mute-btn" onclick="simpleCall('/mute')">🔇</button>
+    </div>
+
 <script>
+let countdownTimer = null;
+
 async function call(endpoint) {
     try {
         const res = await fetch(endpoint);
         const data = await res.json();
 
         if (endpoint === "/capture") {
-            showCountdown(42)
+            showCountdown(42);
         } else {
             showMessage(data.message || "OK");
+
+            if (endpoint === "/stop") {
+                clearCountdown();
+            }
         }
     } catch (e) {
         showMessage("Request failed");
+    }
+}
+
+async function simpleCall(endpoint) {
+    try {
+        await fetch(endpoint);
+    } catch (e) {
+        console.error("Request failed", e);
     }
 }
 
@@ -130,13 +204,26 @@ function showMessage(msg) {
     el.textContent = msg;
 }
 
+function clearCountdown() {
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+    }
+
+    document.getElementById("countdown").textContent = "";
+}
+
 function showCountdown(count) {
+    clearCountdown();
+
     const el = document.getElementById("countdown");
-    const countdown = setInterval(() => {
+    el.textContent = count;
+
+    countdownTimer = setInterval(() => {
         count--;
-        if (count === 0) {
-            clearInterval(countdown);
-            el.textContent = "";
+
+        if (count <= 0) {
+            clearCountdown();
         } else {
             el.textContent = count;
         }
@@ -183,6 +270,11 @@ void app_setup()
 {
     Serial.begin(115200);
     delay(5000);
+    Serial.setDebugOutput(true);
+    USB.begin();
+    Keyboard.begin();
+    log_i("USB HID Keyboard initialized");
+
     log_i("*** yt-hush ***");
     log_i("Data Collection Firmware");
 
@@ -205,6 +297,42 @@ void app_setup()
     server.on("/capture", HTTP_GET, capture_handler);
     server.on("/start", HTTP_GET, start_handler);
     server.on("/stop", HTTP_GET, stop_handler);
+    server.on("/up", HTTP_GET, []() {
+        log_i("Sending UP key");
+        Keyboard.press(TV_UP);
+        Keyboard.releaseAll();
+        server.send(200, "application/json", "{\"message\":\"OK\"}");
+    });
+    server.on("/down", HTTP_GET, []() {
+        log_i("Sending DOWN key");
+        Keyboard.press(TV_DOWN);
+        Keyboard.releaseAll();
+        server.send(200, "application/json", "{\"message\":\"OK\"}");
+    });
+    server.on("/right", HTTP_GET, []() {
+        log_i("Sending RIGHT key");
+        Keyboard.press(TV_RIGHT);
+        Keyboard.releaseAll();
+        server.send(200, "application/json", "{\"message\":\"OK\"}");
+    });
+    server.on("/left", HTTP_GET, []() {
+        log_i("Sending LEFT key");
+        Keyboard.press(TV_LEFT);
+        Keyboard.releaseAll();
+        server.send(200, "application/json", "{\"message\":\"OK\"}");
+    });
+    server.on("/select", HTTP_GET, []() {
+        log_i("Sending SELECT key");
+        Keyboard.press(TV_SELECT);
+        Keyboard.releaseAll();
+        server.send(200, "application/json", "{\"message\":\"OK\"}");
+    });
+    server.on("/mute", HTTP_GET, []() {
+        log_i("Sending MUTE key");
+        Keyboard.press(TV_MUTE);
+        Keyboard.releaseAll();
+        server.send(200, "application/json", "{\"message\":\"OK\"}");
+    });
     server.begin();
     log_i("Web server started");
 
