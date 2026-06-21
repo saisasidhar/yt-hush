@@ -18,9 +18,8 @@ from sscma.datasets.transforms import (
     LoadImageFromFile,
     PackInputs,
 )
-
 from sscma.datasets import ClsDataPreprocessor
-
+from sscma.engine import DetVisualizationHook
 from sscma.models import (
     ImageClassifier,
     MobileNetv2,
@@ -28,7 +27,6 @@ from sscma.models import (
     GlobalAveragePooling,
     CrossEntropyLoss,
 )
-
 from sscma.visualization import UniversalVisualizer
 from sscma.evaluation import Accuracy
 
@@ -84,7 +82,7 @@ model = dict(
         ),
     ),
 )
-
+deploy = model
 
 # =========================
 # PIPELINES
@@ -197,6 +195,11 @@ default_hooks = dict(
     ),
 
     sampler_seed=dict(type=DistSamplerSeedHook),
+
+    visualization=dict(
+        type=DetVisualizationHook,
+        score_thr=0.5,
+    ),
 )
 
 
@@ -210,7 +213,7 @@ visualizer = dict(
         dict(type='TensorboardVisBackend'),
     ]
 )
-
+visualization = visualizer
 
 # =========================
 # LOGGING (for TensorBoard + metrics)

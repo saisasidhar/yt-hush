@@ -24,3 +24,6 @@ timm
 psutil
 regex
 matplotlib
+onnxruntime
+tensorflow
+seaborn
