@@ -5,3 +5,4 @@
 .vscode/ipch
 .playground
 platformio_override.ini
+tags
