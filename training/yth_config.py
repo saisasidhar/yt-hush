@@ -34,7 +34,7 @@ from sscma.evaluation import Accuracy
 # =========================
 # CONFIG
 # =========================
-num_classes = 3
+num_classes = 4
 data_root = "./dataset/"
 exp_name = "exp_name_notdefined"
 work_dir = f"./run/{exp_name}"
