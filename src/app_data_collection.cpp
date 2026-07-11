@@ -8,8 +8,8 @@
 
 #include "USB.h"
 #include "USBHIDKeyboard.h"
-
-#include "index_html.h"
+#include "remote.h"
+#include "app_data_collection_html.h"
 
 #define DEBUG_PORT Serial
 static const char* TAG = "yt-hush";
@@ -26,12 +26,6 @@ SSCMA AI;
 WebServer server(80);
 
 USBHIDKeyboard Keyboard;
-#define TV_SELECT KEY_RETURN
-#define TV_UP     KEY_UP_ARROW
-#define TV_DOWN   KEY_DOWN_ARROW
-#define TV_LEFT   KEY_LEFT_ARROW
-#define TV_RIGHT  KEY_RIGHT_ARROW
-#define TV_MUTE   KEY_F8
 
 bool app_running = false;
 struct BurstCaptureState

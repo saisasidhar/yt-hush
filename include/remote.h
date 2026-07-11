@@ -1,0 +1,6 @@
+#define TV_SELECT KEY_RETURN
+#define TV_UP     KEY_UP_ARROW
+#define TV_DOWN   KEY_DOWN_ARROW
+#define TV_LEFT   KEY_LEFT_ARROW
+#define TV_RIGHT  KEY_RIGHT_ARROW
+#define TV_MUTE   KEY_F8
